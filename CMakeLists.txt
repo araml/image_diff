@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.0)
 
 project(image_diff)
 
-set(CMAKE_CXX_FLAGS "-ggdb -std=c++2a -Wall -Wextra -Wno-long-long -Wno-variadic-macros")
+SET (CMAKE_CXX_COMPILER "/usr/bin/clang++")
+set(CMAKE_CXX_FLAGS "-ggdb -std=c++2a -Wunused -Wall -Wextra -Wno-long-long -Wno-variadic-macros")
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
    add_compile_options (-fdiagnostics-color=always)
@@ -32,5 +33,5 @@ if (BUILD_TESTS)
         target_link_libraries(${name} ${LIBRARIES})
     endmacro()
 
-    add_custom_test(hello_test tests/test.cpp)
+    add_custom_test(test_strict_diff tests/test_strict_diff.cpp)
 endif ()
