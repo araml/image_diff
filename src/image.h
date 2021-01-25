@@ -3,7 +3,7 @@
 #include <string>
 #include <cstddef>
 #include <ostream>
-
+#include <cstring>
 
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
@@ -191,6 +191,7 @@ struct image {
 
     image(image_size sz) : width(sz.width), height(sz.height) {
         data = new T[width * height];
+        std::memset(data, 0, sizeof(T) * width * height);
     }
 
     row<T> operator[](size_t i) {

@@ -66,20 +66,43 @@ auto strict_diff(image<T> &base, image<T> &compare, image<T> &output) {
     }
 }
 
-/*
-auto generate_diff(image &base, image &compare,
-                   image &output, float threshold) -> bool {
-    size_t total_size = width * height;
+template<typename T>
+constexpr auto red_pixel() -> T {
+    if constexpr (pixel_size_v<T> == 3) {
+        return {255, 0, 0};
+    }
+
+    return {255, 0, 0, 255};
+}
+
+auto blend(uchar color, float alpha) -> float {
+    return 255. + (color - 255.) * alpha;
+}
+
+template <typename T>
+auto YIQ_diff(image<T> &base, image<T> &compare,
+                   image<T> &output, float threshold) -> bool {
 
     float max_delta = max_YIQ_delta * threshold * threshold;
 
     bool is_there_diff = false;
 
-    for (size_t i = 0; i < total_size; i++) {
-        if (output[i] = base[i] - dst[i])
-            is_there_diff = true;
+    for (int i = 0; i < base.height; i ++) {
+        for (int k = 0; k < base.width; k++) {
+            YIQ b_yiq = base[i][k];
+            YIQ c_yiq = compare[i][k];
+
+            YIQ result = b_yiq - c_yiq;
+            float delta = 0.503 * result.y * result.y +
+                          0.299 * result.i * result.i +
+                          0.1957 * result.q * result.y;
+            if (delta > max_delta) {
+                output[i][k] = red_pixel<T>();
+                is_there_diff = true;
+            }
+        }
     }
 
-    return true;
+    return is_there_diff;
 
-}*/
+}

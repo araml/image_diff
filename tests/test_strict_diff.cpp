@@ -51,9 +51,20 @@ static auto test_slow_vs_fast_strict_diff() -> void {
     ASSERT_EQ(out1 == out2, true);
 }
 
+static auto check_diff() -> void {
+    image<RGBA> im1("images/donkey_diff_odiff.png");
+    image<RGBA> im2("images/donkey_diff_cpp.png");
+    image<RGBA> out(im1.size());
+
+    strict_diff(im1, im2, out);
+
+    out.save("donkey diff diff");
+}
 
 auto main() -> int {
     test_strict_diff_RGB();
     test_strict_diff_RGBA();
     test_slow_vs_fast_strict_diff();
+
+    check_diff();
 }
