@@ -14,8 +14,8 @@
 #define LOG(...) log_w(__FILE__, __LINE__, __VA_ARGS__)
 
 #define ASSERT_EQ(val1, val2, ...) \
-       log_wassert((val1 == val2), __FILE__, __LINE__, \
-                   "\n", #val1, ":", val1, "\n", "But it should be:", val2);
+       log_wassert((val1) == (val2), __FILE__, __LINE__, \
+                   "\n", #val1, ":", (val1), "\n", "But it should be:", (val2))
 
 #if !defined(_WIN32) && (__cplusplus > 201703L)
 template <typename head, typename... Args>

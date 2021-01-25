@@ -34,4 +34,5 @@ if (BUILD_TESTS)
     endmacro()
 
     add_custom_test(test_strict_diff tests/test_strict_diff.cpp)
+    add_custom_test(test_image_iterator tests/test_image_iterator.cpp)
 endif ()
