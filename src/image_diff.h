@@ -39,8 +39,8 @@ auto fast_diff(image<T> &base, image<T> &compare, image<T> output) -> void {
 
 template <typename T>
 auto slow_diff(image<T> &base, image<T> &compare, image<T> &output) -> void {
-    for (size_t i = 0; i < base.height; i++) {
-        for (size_t k = 0; k < base.width; k++) {
+    for (int i = 0; i < base.height; i++) {
+        for (int k = 0; k < base.width; k++) {
             if (i >= compare.height || k >= compare.width) {
                 if constexpr (pixel_size_v<T> == 3) {
                     output[i][k] = RGB{255, 0, 0};
