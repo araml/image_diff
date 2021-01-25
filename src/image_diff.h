@@ -38,6 +38,28 @@ auto fast_diff(image<T> &base, image<T> &compare, image<T> output) -> void {
 }
 
 template <typename T>
+auto slow_diff(image<T> &base, image<T> &compare, image<T> &output) -> void {
+    for (size_t i = 0; i < base.height; i++) {
+        for (size_t k = 0; k < base.width; k++) {
+            if (i >= compare.height || k >= compare.width) {
+                if constexpr (pixel_size_v<T> == 3) {
+                    output[i][k] = RGB{255, 0, 0};
+                } else {
+                    output[i][k] = RGBA{255, 0, 0, 255};
+                }
+            } else {
+                uchar v = inf_norm(base[i][k], compare[i][k]);
+                if constexpr (pixel_size_v<T> == 3) {
+                    output[i][k] = RGB{v, v, v};
+                } else {
+                    output[i][k] = RGBA{v, v, v, 255};
+                }
+            }
+        }
+    }
+}
+
+template <typename T>
 auto strict_diff(image<T> &base, image<T> &compare, image<T> &output) {
     if (base.size() == compare.size()) {
         fast_diff(base, compare, output);

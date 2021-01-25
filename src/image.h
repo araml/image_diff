@@ -36,6 +36,10 @@ struct RGB {
         return (r == rhs.r) && (g == rhs.g) && (b == rhs.b);
     }
 
+    auto operator!=(const RGB &rhs) const -> bool {
+        return !(*this == rhs);
+    }
+
     operator YIQ() {
         float y = r * 0.29889531 + g * 0.58662247 + b * 0.11448223;
         float i = r * 0.59597799 - g * 0.27417610 - b * 0.32180189;
@@ -54,6 +58,10 @@ struct RGBA {
 
     auto operator==(const RGBA &rhs) const -> bool {
         return (r == rhs.r) && (g == rhs.g) && (b == rhs.b) && (a == rhs.a);
+    }
+
+    auto operator!=(const RGBA &rhs) const -> bool {
+        return !(*this == rhs);
     }
 
     operator YIQ() {
@@ -151,12 +159,21 @@ struct image {
     };
 
     using iterator = iterator_type;
+    using const_iterator = iterator_type;
 
     iterator begin() {
         return iterator(data);
     }
 
     iterator end() {
+        return iterator(data + (width * height));
+    }
+
+    const_iterator cbegin() const {
+        return iterator(data);
+    }
+
+    const_iterator cend() const {
         return iterator(data + (width * height));
     }
 
@@ -180,13 +197,30 @@ struct image {
         return row<T>(&data[i * width], width);
     }
 
-    auto size() -> image_size {
+    auto size() const -> image_size {
         return {width, height};
     }
 
     auto save(std::string_view path) -> void {
         stbi_write_png(path.data(), width, height, pixel_size_v<T>, data,
                        width * pixel_size_v<T>);
+    }
+
+    auto operator==(const image<T> &rhs) const -> bool {
+        if (size() != rhs.size())
+            return false;
+
+        for (auto it1 = cbegin(),
+             it2 = rhs.cbegin(); it1 != cend() && it2 != rhs.cend();
+             ++it1, ++it2) {
+            if (*it1 != *it2)
+                return false;
+        }
+        return true;
+    }
+
+    auto operator!=(const image<T> &rhs) const -> bool {
+        return !(*this == rhs);
     }
 
     T *data;

@@ -16,6 +16,13 @@ static auto test_ptr_constructor() -> void {
     }
 }
 
+static auto test_equal_op() -> void {
+    image<RGB> im("images/red_box_no_alpha.png");
+    image<RGB> im2("images/red_box_no_alpha.png");
+
+    ASSERT_EQ(im == im2, true);
+}
+
 auto main() -> int {
     test_ptr_constructor();
 }
