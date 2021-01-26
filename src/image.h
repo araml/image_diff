@@ -41,6 +41,7 @@ struct RGB {
     }
 
     operator YIQ() {
+        // No alpha blend
         float y = r * 0.29889531 + g * 0.58662247 + b * 0.11448223;
         float i = r * 0.59597799 - g * 0.27417610 - b * 0.32180189;
         float q = r * 0.21147017 - g * 0.52261711 + b * 0.31114694;
@@ -49,6 +50,10 @@ struct RGB {
 
     friend auto operator<<(std::ostream &os, const RGB &p) -> std::ostream&;
 };
+
+static auto blend(uchar color, uchar alpha) -> int  {
+    return 255 + ((int)color - 255) * alpha;
+}
 
 struct RGBA {
     uchar r;
@@ -65,9 +70,27 @@ struct RGBA {
     }
 
     operator YIQ() {
-        float y = r * 0.29889531 + g * 0.58662247 + b * 0.11448223;
-        float i = r * 0.59597799 - g * 0.27417610 - b * 0.32180189;
-        float q = r * 0.21147017 - g * 0.52261711 + b * 0.31114694;
+        float rr = r;
+        float gg = g;
+        float bb = b;
+        if (a < 255) {
+            rr = blend(r, a);
+            gg = blend(g, a);
+            bb = blend(b, a);
+        }
+
+        /*
+        float rr = blend(r, a);
+        float gg = blend(g, a);
+        float bb = blend(b, a);
+        */
+        float y = rr * 0.29889531 + gg * 0.58662247 + bb * 0.11448223;
+        float i = rr * 0.59597799 - gg * 0.27417610 - bb * 0.32180189;
+        float q = rr * 0.21147017 - gg * 0.52261711 + bb * 0.31114694;
+
+        //float y = rr * 0.29889531 + gg * 0.58662247 + bb * 0.11448223;
+        //float i = rr * 0.59597799 - gg * 0.27417610 - bb * 0.32180189;
+        //float q = rr * 0.21147017 - gg * 0.52261711 + bb * 0.31114694;
         return YIQ{y, i, q};
     }
 
@@ -228,3 +251,15 @@ struct image {
     int width;
     int height;
 };
+
+struct image_info {
+    int width;
+    int height;
+    int channels;
+};
+
+auto query_image_info(std::string_view path) -> image_info {
+    image_info info;
+    stbi_info(path.data(), &info.width, &info.height, &info.channels);
+    return info;
+}
