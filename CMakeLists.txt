@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0)
 project(image_diff)
 
 SET (CMAKE_CXX_COMPILER "/usr/bin/clang++")
-set(CMAKE_CXX_FLAGS "-ggdb -std=c++2a -Wunused -Wall -Wextra -Wno-long-long -Wno-variadic-macros")
+set(CMAKE_CXX_FLAGS "-ggdb -O2 -std=c++2a -Wunused -Wall -Wextra -Wno-long-long -Wno-variadic-macros")
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
    add_compile_options (-fdiagnostics-color=always)
@@ -20,6 +20,10 @@ include_directories(src)
 
 add_executable(image_diff
                src/main.cpp)
+target_link_libraries(image_diff
+                      "-lpthread")
+
+
 
 option(BUILD_TESTS "Build unit tests")
 

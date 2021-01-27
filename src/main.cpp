@@ -7,8 +7,11 @@
 #include <iostream>
 #include <chrono>
 #include <unordered_map>
+#include <future>
 
 #include <image_diff.h>
+
+using namespace std::chrono;
 
 constexpr char help[] = "Usage: (TBD) [OPTION]... "
                         "base_image compare_image [output]\n\n"
@@ -39,9 +42,22 @@ auto main(int argc, char *argv[]) -> int {
             strict_diff(base, compare, output);
             output.save(argv[4]);
         } else {
-            image<RGBA> base(argv[2]);
-            image<RGBA> compare(argv[3]);
-            image<RGBA> output(base.size());
+            //image<RGBA> base(argv[2]);
+            //image<RGBA> compare(argv[3]);
+            LOG("Async test");
+            std::future<image<RGBA>> bf = std::async(
+                std::launch::async, [argv] { return image<RGBA>{argv[2]}; });
+            std::future<image<RGBA>> cf = std::async(
+                std::launch::async, [argv] { return image<RGBA>{argv[3]}; });
+            std::future<image<RGBA>> of =
+                std::async(std::launch::async, [base_info] {
+                    return image<RGBA>{
+                        image_size{base_info.width, base_info.height}};
+                });
+
+            image<RGBA> base = bf.get();
+            image<RGBA> compare = cf.get();
+            image<RGBA> output = of.get();
             strict_diff(base, compare, output);
             output.save(argv[4]);
         }
@@ -53,11 +69,45 @@ auto main(int argc, char *argv[]) -> int {
             YIQ_diff(base, compare, output);
             output.save(argv[3]);
         } else {
-            image<RGBA> base(argv[1]);
-            image<RGBA> compare(argv[2]);
-            image<RGBA> output(base.size());
+            auto old_total = steady_clock::now();
+            LOG("Async test");
+            std::future<image<RGBA>> bf = std::async(
+                std::launch::async, [argv] {
+                    auto old = steady_clock::now();
+                    image<RGBA> im{argv[1]};
+                    auto now = steady_clock::now();
+                    LOG("Time to load compare:", duration_cast<nanoseconds>(now - old).count() * 1e-6);
+                    return im;
+                });
+            std::future<image<RGBA>> cf = std::async(
+                std::launch::async, [argv] {
+                    auto old = steady_clock::now();
+                    image<RGBA> im{argv[2]};
+                    auto now = steady_clock::now();
+                    LOG("Time to load compare:", duration_cast<nanoseconds>(now - old).count() * 1e-6);
+                    return im;
+                });
+            std::future<image<RGBA>> of =
+                std::async(std::launch::async, [base_info] {
+                    return image<RGBA>{
+                        image_size{base_info.width, base_info.height}};
+                });
+
+            image<RGBA> base = bf.get();
+            image<RGBA> compare = cf.get();
+            image<RGBA> output = of.get();
+
+            auto old_diff = steady_clock::now();
             YIQ_diff(base, compare, output);
+            auto now_diff = steady_clock::now();
+            LOG("Time to diff:",
+                duration_cast<nanoseconds>(now_diff - old_diff).count() * 1e-6);
+
+            auto old = steady_clock::now();
             output.save(argv[3]);
+            auto now = steady_clock::now();
+            LOG("Time to save:", duration_cast<nanoseconds>(now - old).count() * 1e-6);
+            LOG("Total time:", duration_cast<nanoseconds>(now - old_total).count() * 1e-6);
         }
 
     }

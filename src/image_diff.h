@@ -22,7 +22,7 @@ auto inf_norm(const Color &p1, const Color &p2) -> uchar {
 }
 
 template <typename T>
-auto fast_diff(image<T> &base, image<T> &compare, image<T> output) -> void {
+auto fast_diff(image<T> &base, image<T> &compare, image<T> &output) -> void {
     size_t length = base.width * base.height;
     T* base_data = base.data;
     T* comp_data = compare.data;

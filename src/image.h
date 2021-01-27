@@ -4,6 +4,13 @@
 #include <cstddef>
 #include <ostream>
 #include <cstring>
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+
+#include <error.h>
 
 #define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
@@ -15,7 +22,37 @@
 #include <stb_image_write.h>
 #endif
 
+
 using uchar = unsigned char;
+
+struct image_data {
+    int width;
+    int height;
+    int channels;
+    uchar *ptr;
+};
+
+ /*  So I can plug different image loaders
+  */
+static auto load_image(std::string_view path) -> image_data {
+    image_data data;
+    data.ptr = stbi_load(path.data(), &data.width,
+                         &data.height, &data.channels, 0);
+    /*
+     *        int fd = open(path.data(), O_RDONLY);
+        struct stat sb;
+        if (fstat(fd, &sb) == -1) {
+            LOG("Error getting file size");
+        }
+        uchar *file = reinterpret_cast<uchar *>(
+            mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0));
+        data = reinterpret_cast<T *>(
+            stbi_load_from_memory(file, sb.st_size, &width, &height, &channels,
+       0));
+    */
+
+    return data;
+}
 
 struct YIQ {
     float y;
@@ -205,10 +242,12 @@ struct image {
     }
 
     image(std::string_view path) {
-        int channels;
+        auto im_data = load_image(path);
+        data = reinterpret_cast<T *>(im_data.ptr);
+        width = im_data.width;
+        height = im_data.height;
+        channels = im_data.channels;
 
-        data = reinterpret_cast<T *>(stbi_load(path.data(),
-                                     &width, &height, &channels, 0));
         assert(channels == pixel_size_v<T>);
     }
 
@@ -216,6 +255,17 @@ struct image {
         data = new T[width * height];
         std::memset(data, 0, sizeof(T) * width * height);
     }
+
+    image(image &&img)
+        : width(img.width), height(img.height),
+          channels(img.channels), data(std::move(img.data)) {
+        img.data = nullptr;
+    }
+
+    // TOOD: no deallocation of memory now since the program finishes after processing
+    // all the data
+    // maybe think of doing dealloc if I want to share it as a lib or something
+    ~image() {}
 
     row<T> operator[](size_t i) {
         return row<T>(&data[i * width], width);
@@ -226,6 +276,7 @@ struct image {
     }
 
     auto save(std::string_view path) -> void {
+        stbi_write_png_compression_level = 2;
         stbi_write_png(path.data(), width, height, pixel_size_v<T>, data,
                        width * pixel_size_v<T>);
     }
@@ -250,6 +301,7 @@ struct image {
     T *data;
     int width;
     int height;
+    int channels;
 };
 
 struct image_info {
